@@ -1,0 +1,26 @@
+[build-system]
+requires = ["scikit-build-core>=0.9.0", "pybind11>=2.11.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "hello-cpp"
+dynamic = ["version"]
+description = "Minimal pybind11 hello world module built with CMake."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Example Author" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "License :: OSI Approved :: MIT License",
+]
+
+[tool.scikit-build]
+minimum-version = "0.9"
+cmake.version = ">=3.18"
+build-dir = "build/{wheel_tag}"
+wheel.packages = []
+
+[tool.scikit-build.metadata]
+version = "0.0.0"
