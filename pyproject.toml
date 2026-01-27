@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "hello-cpp"
-dynamic = ["version"]
+version = "0.1.0"
 description = "Minimal pybind11 hello world module built with CMake."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -21,6 +21,3 @@ minimum-version = "0.9"
 cmake.version = ">=3.18"
 build-dir = "build/{wheel_tag}"
 wheel.packages = []
-
-[tool.scikit-build.metadata]
-version = "0.0.0"

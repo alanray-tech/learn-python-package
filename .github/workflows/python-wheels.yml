@@ -39,18 +39,25 @@ jobs:
           tag="${GITHUB_REF_NAME}"
           echo "value=${tag#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Build wheels (release version)
+      - name: Set version for release
         if: github.event_name == 'release'
-        uses: pypa/cibuildwheel@v3.1.0
-        env:
-          CIBW_BUILD_FRONTEND: "build"
-          CIBW_BUILD_FRONTEND_ARGS: >-
-            --config-setting=metadata={"version":"${{ steps.release_version.outputs.value }}"}
-        with:
-          output-dir: wheelhouse
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
 
-      - name: Build wheels (PR)
-        if: github.event_name != 'release'
+          path = Path("pyproject.toml")
+          data = path.read_text(encoding="utf-8")
+          version = "${{ steps.release_version.outputs.value }}"
+          old = 'version = "0.1.0"'
+          new = f'version = "{version}"'
+          if old not in data:
+              raise SystemExit('Expected version string not found in pyproject.toml')
+          data = data.replace(old, new, 1)
+          path.write_text(data, encoding="utf-8")
+          PY
+
+      - name: Build wheels
         uses: pypa/cibuildwheel@v3.1.0
         with:
           output-dir: wheelhouse
