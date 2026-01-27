@@ -1,12 +1,13 @@
 name: Build Python Wheels
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
   release:
-    branches:
-      - main
     types: [published]
 
 concurrency:
@@ -43,7 +44,8 @@ jobs:
         uses: pypa/cibuildwheel@v3.1.0
         env:
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_BUILD_FRONTEND_ARGS: "--config-setting=metadata.version=${{ steps.release_version.outputs.value }}"
+          CIBW_BUILD_FRONTEND_ARGS: >-
+            --config-setting=metadata={"version":"${{ steps.release_version.outputs.value }}"}
         with:
           output-dir: wheelhouse
 
