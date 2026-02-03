@@ -26,10 +26,6 @@ cmake.version = ">=3.26"
 build-dir = "build/{wheel_tag}"
 wheel.packages = []
 
-[tool.setuptools_scm]
-# local_scheme = "no-local-version"
-version_scheme = "release-branch-semver"
-
 [tool.uv.sources]
 hello-cpp = { workspace = true }
 
