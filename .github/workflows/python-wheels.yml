@@ -61,8 +61,15 @@ jobs:
         uses: pypa/cibuildwheel@v3.1.0
         env:
           CIBW_BUILD: "cp311-*"
+          CIBW_CONFIG_SETTINGS: "wheel.build-tag=${{ github.run_number }}"
         with:
           output-dir: wheelhouse
+
+      - name: List built wheels (verify build tag)
+        shell: bash
+        run: |
+          echo "Built wheels:"
+          ls -lh wheelhouse/*.whl || dir wheelhouse\*.whl
 
       - name: Upload wheels
         uses: actions/upload-artifact@v4
