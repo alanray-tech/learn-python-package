@@ -3,7 +3,7 @@
 namespace py = pybind11;
 
 std::string hello() {
-    return "Hello from C++!";
+    return std::string("v") + std::string(HELLO_CPP_VERSION) + ": Hello from C++!";
 }
 
 PYBIND11_MODULE(hello_cpp, m) {
