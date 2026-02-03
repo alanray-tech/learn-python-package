@@ -27,7 +27,7 @@ build-dir = "build/{wheel_tag}"
 wheel.packages = []
 
 [tool.setuptools_scm]
-local_scheme = "no-local-version"
+# local_scheme = "no-local-version"
 version_scheme = "release-branch-semver"
 
 [tool.uv.sources]
