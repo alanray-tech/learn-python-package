@@ -38,22 +38,44 @@ jobs:
           CIBW_BUILD: "cp311-*linux*"
           CIBW_MANYLINUX_X86_64_IMAGE: "quay.io/pypa/manylinux_2_28_x86_64:latest"
           CIBW_BEFORE_BUILD: |
-            # Install CUDA toolkit
-            # For manylinux containers, you may need to install CUDA manually
-            # Option 1: Use system package manager (if available)
-            yum install -y cuda-toolkit-12-4 2>/dev/null || \
-            apt-get update && apt-get install -y nvidia-cuda-toolkit 2>/dev/null || \
-            echo "CUDA toolkit installation skipped - may need manual setup"
+            # Install CUDA toolkit for manylinux containers
+            # Note: CUDA installation in manylinux containers is complex
+            # Consider using a CUDA-enabled base image or pre-installing CUDA
+            
+            echo "Setting up CUDA environment..."
+            
+            # Try to find existing CUDA installation
+            if [ -d "/usr/local/cuda" ]; then
+              export CUDA_HOME=/usr/local/cuda
+            elif [ -d "/opt/cuda" ]; then
+              export CUDA_HOME=/opt/cuda
+            else
+              # Try to install CUDA via package manager
+              if command -v yum &> /dev/null; then
+                # For RHEL/CentOS/AlmaLinux - try to add CUDA repo and install
+                echo "Attempting to install CUDA via yum..."
+                yum install -y wget || true
+                # Note: This may require manual setup of CUDA repository
+                # For production, consider using a CUDA-enabled Docker image
+              fi
+              
+              # Default CUDA_HOME if installation fails
+              export CUDA_HOME=/usr/local/cuda
+              mkdir -p $CUDA_HOME/bin $CUDA_HOME/lib64 || true
+            fi
             
             # Set CUDA environment variables
-            export CUDA_HOME=/usr/local/cuda
-            export PATH=$PATH:/usr/local/cuda/bin
-            export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+            export PATH=$PATH:$CUDA_HOME/bin
+            export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
             
             # Verify CUDA if available
             if command -v nvcc &> /dev/null; then
-              echo "CUDA compiler version:"
-              nvcc --version || true
+              echo "CUDA compiler found:"
+              nvcc --version
+            else
+              echo "Warning: CUDA compiler (nvcc) not found"
+              echo "CUDA_HOME: $CUDA_HOME"
+              echo "You may need to install CUDA manually or use a CUDA-enabled base image"
             fi
           CIBW_ENVIRONMENT: "CUDA_HOME=/usr/local/cuda PATH=$PATH:/usr/local/cuda/bin LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
           CIBW_CONFIG_SETTINGS: "wheel.build-tag=${{ github.run_number }}"

@@ -1,8 +1,24 @@
-# CUDA-specific build configuration for Linux
-# This file is used when building with cibuildwheel for CUDA-enabled wheels
-# The actual CUDA installation and environment setup is handled in the GitHub Actions workflow
+[build-system]
+requires = ["scikit-build-core>=0.9.0", "pybind11>=2.11.0", "setuptools-scm"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "hello-cuda"
+dynamic = ["version"]
+description = "CUDA-enabled pybind11 hello world module built with CMake."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+license = { text = "MIT" }
+authors = [{ name = "Example Author" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "Programming Language :: CUDA",
+  "License :: OSI Approved :: MIT License",
+]
 
 [tool.scikit-build]
+metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 minimum-version = "0.9"
 cmake.version = ">=3.26"
 build-dir = "build/{wheel_tag}"
@@ -10,15 +26,8 @@ wheel.packages = []
 
 # CMake configuration for CUDA
 # These args will be passed to CMake during the build
-# Note: CUDA language support should be enabled in your CMakeLists.txt
 cmake.args = [
     "-DCMAKE_CUDA_ARCHITECTURES=75;80;86;89;90",  # Common GPU architectures (adjust as needed)
     "-DENABLE_CUDA=ON",
     "-DCMAKE_CUDA_COMPILER=nvcc",
 ]
-
-# Example CMakeLists.txt additions needed for CUDA:
-# cmake_minimum_required(VERSION 3.26)
-# enable_language(CUDA)
-# find_package(CUDA REQUIRED)
-# set(CMAKE_CUDA_STANDARD 17)
