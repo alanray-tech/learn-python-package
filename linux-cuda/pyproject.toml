@@ -24,10 +24,7 @@ cmake.version = ">=3.26"
 build-dir = "build/{wheel_tag}"
 wheel.packages = []
 
-# CMake configuration for CUDA
-# These args will be passed to CMake during the build
-cmake.args = [
-    "-DCMAKE_CUDA_ARCHITECTURES=75;80;86;89;90",  # Common GPU architectures (adjust as needed)
-    "-DENABLE_CUDA=ON",
-    "-DCMAKE_CUDA_COMPILER=nvcc",
-]
+# Configure setuptools_scm to find git root in parent directory
+# Since we're building from linux-cuda/ subdirectory, git root is one level up
+[tool.setuptools_scm]
+root = ".."
