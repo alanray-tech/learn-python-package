@@ -1,0 +1,75 @@
+name: Build Python Wheels (Linux CUDA)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - main
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build-cuda-wheels:
+    name: Build CUDA Wheels (Linux)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          show-progress: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.1.0
+        env:
+          CIBW_BUILD: "cp311-*linux*"
+          CIBW_MANYLINUX_X86_64_IMAGE: "quay.io/pypa/manylinux_2_28_x86_64:latest"
+          CIBW_BEFORE_BUILD: |
+            # Install CUDA toolkit
+            # For manylinux containers, you may need to install CUDA manually
+            # Option 1: Use system package manager (if available)
+            yum install -y cuda-toolkit-12-4 2>/dev/null || \
+            apt-get update && apt-get install -y nvidia-cuda-toolkit 2>/dev/null || \
+            echo "CUDA toolkit installation skipped - may need manual setup"
+            
+            # Set CUDA environment variables
+            export CUDA_HOME=/usr/local/cuda
+            export PATH=$PATH:/usr/local/cuda/bin
+            export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+            
+            # Verify CUDA if available
+            if command -v nvcc &> /dev/null; then
+              echo "CUDA compiler version:"
+              nvcc --version || true
+            fi
+          CIBW_ENVIRONMENT: "CUDA_HOME=/usr/local/cuda PATH=$PATH:/usr/local/cuda/bin LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+          CIBW_CONFIG_SETTINGS: "wheel.build-tag=${{ github.run_number }}"
+        with:
+          output-dir: wheelhouse
+          package-dir: linux-cuda
+
+      - name: List built wheels
+        shell: bash
+        run: |
+          echo "Built CUDA wheels:"
+          ls -lh wheelhouse/*.whl || echo "No wheels found"
+
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheelhouse-linux-cuda
+          path: wheelhouse/*.whl
+

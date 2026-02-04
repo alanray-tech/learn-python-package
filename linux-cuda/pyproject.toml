@@ -1,0 +1,24 @@
+# CUDA-specific build configuration for Linux
+# This file is used when building with cibuildwheel for CUDA-enabled wheels
+# The actual CUDA installation and environment setup is handled in the GitHub Actions workflow
+
+[tool.scikit-build]
+minimum-version = "0.9"
+cmake.version = ">=3.26"
+build-dir = "build/{wheel_tag}"
+wheel.packages = []
+
+# CMake configuration for CUDA
+# These args will be passed to CMake during the build
+# Note: CUDA language support should be enabled in your CMakeLists.txt
+cmake.args = [
+    "-DCMAKE_CUDA_ARCHITECTURES=75;80;86;89;90",  # Common GPU architectures (adjust as needed)
+    "-DENABLE_CUDA=ON",
+    "-DCMAKE_CUDA_COMPILER=nvcc",
+]
+
+# Example CMakeLists.txt additions needed for CUDA:
+# cmake_minimum_required(VERSION 3.26)
+# enable_language(CUDA)
+# find_package(CUDA REQUIRED)
+# set(CMAKE_CUDA_STANDARD 17)
