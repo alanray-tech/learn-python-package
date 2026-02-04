@@ -36,48 +36,22 @@ jobs:
         uses: pypa/cibuildwheel@v3.1.0
         env:
           CIBW_BUILD: "cp311-*linux*"
-          CIBW_MANYLINUX_X86_64_IMAGE: "quay.io/pypa/manylinux_2_28_x86_64:latest"
+          # Use CUDA-enabled manylinux image from https://github.com/ameli/manylinux-cuda
+          # Available images: sameli/manylinux_2_34_x86_64_cuda_12.9, sameli/manylinux_2_28_x86_64_cuda_12.6, etc.
+          CIBW_MANYLINUX_X86_64_IMAGE: "sameli/manylinux_2_34_x86_64_cuda_12.9"
           CIBW_BEFORE_BUILD: |
-            # Install CUDA toolkit for manylinux containers
-            # Note: CUDA installation in manylinux containers is complex
-            # Consider using a CUDA-enabled base image or pre-installing CUDA
-            
-            echo "Setting up CUDA environment..."
-            
-            # Try to find existing CUDA installation
-            if [ -d "/usr/local/cuda" ]; then
-              export CUDA_HOME=/usr/local/cuda
-            elif [ -d "/opt/cuda" ]; then
-              export CUDA_HOME=/opt/cuda
-            else
-              # Try to install CUDA via package manager
-              if command -v yum &> /dev/null; then
-                # For RHEL/CentOS/AlmaLinux - try to add CUDA repo and install
-                echo "Attempting to install CUDA via yum..."
-                yum install -y wget || true
-                # Note: This may require manual setup of CUDA repository
-                # For production, consider using a CUDA-enabled Docker image
-              fi
-              
-              # Default CUDA_HOME if installation fails
-              export CUDA_HOME=/usr/local/cuda
-              mkdir -p $CUDA_HOME/bin $CUDA_HOME/lib64 || true
-            fi
-            
-            # Set CUDA environment variables
-            export PATH=$PATH:$CUDA_HOME/bin
-            export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
-            
-            # Verify CUDA if available
+            # Verify CUDA is available (should be pre-installed in the image)
+            echo "Verifying CUDA installation..."
             if command -v nvcc &> /dev/null; then
-              echo "CUDA compiler found:"
+              echo "CUDA compiler version:"
               nvcc --version
+              echo "CUDA_HOME: ${CUDA_HOME:-/usr/local/cuda}"
             else
-              echo "Warning: CUDA compiler (nvcc) not found"
-              echo "CUDA_HOME: $CUDA_HOME"
-              echo "You may need to install CUDA manually or use a CUDA-enabled base image"
+              echo "Error: CUDA compiler (nvcc) not found!"
+              exit 1
             fi
-          CIBW_ENVIRONMENT: "CUDA_HOME=/usr/local/cuda PATH=$PATH:/usr/local/cuda/bin LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH"
+          # Environment variables are already set in the manylinux-cuda image
+          # CUDA_HOME=/usr/local/cuda, PATH, and LD_LIBRARY_PATH are configured
           CIBW_CONFIG_SETTINGS: "wheel.build-tag=${{ github.run_number }}"
         with:
           output-dir: wheelhouse
