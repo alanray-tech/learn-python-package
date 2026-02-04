@@ -35,12 +35,15 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.1.0
         env:
-          CIBW_BUILD: "cp311-*linux*"
+          # Only build manylinux wheels (skip musllinux since CUDA is only in manylinux images)
+          CIBW_BUILD: "cp311-*manylinux*"
+          # Skip musllinux builds (they don't have CUDA)
+          CIBW_SKIP: "cp311-*musllinux*"
           # Use CUDA-enabled manylinux image from https://github.com/ameli/manylinux-cuda
           # Available images: sameli/manylinux_2_34_x86_64_cuda_12.9, sameli/manylinux_2_28_x86_64_cuda_12.6, etc.
           CIBW_MANYLINUX_X86_64_IMAGE: "sameli/manylinux_2_34_x86_64_cuda_12.9"
           CIBW_BEFORE_BUILD: |
-            # Verify CUDA is available (should be pre-installed in the image)
+            # Verify CUDA is available (should be pre-installed in the manylinux image)
             echo "Verifying CUDA installation..."
             if command -v nvcc &> /dev/null; then
               echo "CUDA compiler version:"
